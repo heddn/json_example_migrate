@@ -1,0 +1,107 @@
+# This migration demonstrates importing from a monolithic JSON file.
+id: omdb_json
+label: JSON feed of movies
+migration_group: default
+source:
+  # We use the JSON source plugin.
+  plugin: url
+  data_fetcher_plugin: http
+  data_parser_plugin: json
+  # The data_parser normally limits the fields passed on to the source plugin
+  # to fields configured to be used as part of the migration. To support more
+  # dynamic migrations, the JSON data parser supports including the original
+  # data for the current row. Simply include the 'include_raw_data' flag set
+  # to `true` to enable this. This option is disabled by default to minimize
+  # memory footprint for migrations that do not need this capability.
+  include_raw_data: true
+  urls: 'http://www.omdbapi.com/?s=space&type=movie&r=json&apikey=86e4b169'
+  # An xpath-like selector corresponding to the items to be imported.
+  item_selector: Search
+  # Under 'fields', we list the data items to be imported. The first level keys
+  # are the source field names we want to populate (the names to be used as
+  # sources in the process configuration below). For each field we're importing,
+  # we provide a label (optional - this is for display in migration tools) and
+  # an xpath for retrieving that value. It's important to note that this xpath
+  # is relative to the elements retrieved by item_selector.
+ fields:
+    -
+      name: title
+      label: Title
+      selector: Title
+    -
+      name: year
+      label: 'Publish Year'
+      selector: Year
+    -
+      name: imdbID
+      label: 'IMDB ID'
+      selector: imdbID
+    -
+      name: poster
+      label: 'Image URL to a movie poster'
+      selector: Poster
+  # Under 'ids', we identify source fields populated above which will uniquely
+  # identify each imported item. The 'type' makes sure the migration map table
+  # uses the proper schema type for stored the IDs.
+  ids:
+    imdbID:
+      type: string
+  constants:
+    bundle: movie
+    day_month: 01-01-
+    destination_directory: public://posters/
+    file_extension: .jpg
+process:
+  # Note that the source field names here (title and year) were
+  # defined by the 'fields' configuration for the source plugin above.
+  type: constants/bundle
+  title: title
+  field_published_date:
+    -
+      plugin: concat
+      source:
+        - constants/day_month
+        - year
+    -
+      plugin: format_date
+      from_format: d-m-Y
+      to_format: Y-m-d
+      timezone: America/Managua
+#  From https://images-na.ssl-images-amazon.com/images/M/MV5BMTZkZTBhYmUtMTIzNy00YTViLTg1OWItNGUwMmVlN2FjZTVkXkEyXkFqcGdeQXVyNDYyMDk5MTU@._V1_SX300.jpg,
+#  generate a destination_basename of MV5BMTZkZTBhYmUtMTIzNy00YTViLTg1OWItNGUwMmVlN2FjZTVkXkEyXkFqcGdeQXVyNDYyMDk5MTU@._V1_SX300.jpg...
+#  destination_basename:
+#    plugin: callback
+#    callable: basename
+#    source: poster
+#  destination_path:
+#    plugin: concat
+#    source:
+#      - 'constants/destination_directory'
+#      - '@destination_basename'
+  destination_path:
+    plugin: concat
+    source:
+      - constants/destination_directory
+      - imdbID
+      - constants/file_extension
+  field_image/target_id:
+    -
+      plugin: file_copy
+      source:
+        - poster
+        - '@destination_path'
+    -
+      plugin: entity_generate
+      value_key: uri
+      entity_type: file
+  field_image/alt: title
+  field_image/title: title
+destination:
+  plugin: entity:node
+migration_dependencies:
+  required: {  }
+  optional: {  }
+dependencies:
+  enforced:
+    module:
+      - custom_migrate

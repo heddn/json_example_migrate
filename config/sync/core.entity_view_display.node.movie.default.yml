@@ -1,0 +1,45 @@
+uuid: 5e4af896-379f-4b71-8050-3c03066dfdc6
+langcode: en
+status: true
+dependencies:
+  config:
+    - field.field.node.movie.field_image
+    - field.field.node.movie.field_published_date
+    - node.type.movie
+  module:
+    - datetime
+    - field_layout
+    - image
+    - layout_discovery
+    - user
+third_party_settings:
+  field_layout:
+    id: layout_onecol
+    settings: {  }
+id: node.movie.default
+targetEntityType: node
+bundle: movie
+mode: default
+content:
+  field_image:
+    weight: 102
+    label: above
+    settings:
+      image_style: ''
+      image_link: ''
+    third_party_settings: {  }
+    type: image
+    region: content
+  field_published_date:
+    weight: 101
+    label: above
+    settings:
+      format_type: medium
+      timezone_override: ''
+    third_party_settings: {  }
+    type: datetime_default
+    region: content
+  links:
+    weight: 100
+    region: content
+hidden: {  }

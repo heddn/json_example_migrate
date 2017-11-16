@@ -1,0 +1,88 @@
+uuid: 2a38e898-0b16-458a-afa1-899ba00899af
+langcode: en
+status: true
+dependencies:
+  enforced:
+    module:
+      - custom_migrate
+_core:
+  default_config_hash: zIpObuEyvGZizdshTJahCNHqlw9FU3JR9Qmhc7M-2Yw
+id: omdb_json
+class: null
+field_plugin_method: null
+cck_plugin_method: null
+migration_tags: null
+migration_group: default
+label: 'JSON feed of movies'
+source:
+  plugin: url
+  data_fetcher_plugin: http
+  data_parser_plugin: json
+  include_raw_data: true
+  urls: 'http://www.omdbapi.com/?s=space&type=movie&r=json&apikey=86e4b169'
+  item_selector: Search
+  fields:
+    -
+      name: title
+      label: Title
+      selector: Title
+    -
+      name: year
+      label: 'Publish Year'
+      selector: Year
+    -
+      name: imdbID
+      label: 'IMDB ID'
+      selector: imdbID
+    -
+      name: poster
+      label: 'Image URL to a movie poster'
+      selector: Poster
+  ids:
+    imdbID:
+      type: string
+  constants:
+    bundle: movie
+    day_month: 01-01-
+    destination_directory: 'public://posters/'
+    file_extension: .jpg
+process:
+  type: constants/bundle
+  title: title
+  field_published_date:
+    -
+      plugin: concat
+      source:
+        - constants/day_month
+        - year
+    -
+      plugin: format_date
+      from_format: d-m-Y
+      to_format: Y-m-d
+      timezone: America/Managua
+  destination_basename:
+    plugin: callback
+    callable: basename
+    source: poster
+  destination_path:
+    plugin: concat
+    source:
+      - constants/destination_directory
+      - '@destination_basename'
+  field_image/target_id:
+    -
+      plugin: file_copy
+      source:
+        - poster
+        - '@destination_path'
+    -
+      plugin: entity_generate
+      value_key: uri
+      entity_type: file
+  field_image/alt: title
+  field_image/title: title
+destination:
+  plugin: 'entity:node'
+migration_dependencies:
+  required: {  }
+  optional: {  }
