@@ -23,7 +23,7 @@ source:
   # we provide a label (optional - this is for display in migration tools) and
   # an xpath for retrieving that value. It's important to note that this xpath
   # is relative to the elements retrieved by item_selector.
- fields:
+  fields:
     -
       name: title
       label: Title
